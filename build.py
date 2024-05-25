@@ -566,6 +566,7 @@ def pre_patch(config):
                 inside = re.sub('None', 'null', inside)
                 inside = re.sub('True', 'true', inside)
                 inside = re.sub('False', 'false', inside)
+                inside = re.sub('#', '//', inside)
                 while True:
                     sub_match = re.search(r'''len\s*\(([^()]+)\)''', inside)
                     if sub_match == None:

@@ -166,119 +166,126 @@ def main():
             used_energy = 0
             
             for spawn in spawns:
-                if not spawn.spawning and spawn.isActive():
-                    #This constructs a creep name from the timecode we made earlier, adding an 's' to the front for every previous creep we've spawned on this tick.
-                    name = ''
-                    for i in range(num_spawns):
-                        name += 's'
-                    name += timecode
-                    
-                    
-                    #This creates a list of all of our creeps with this room as their target room, which we can filter later.
-                    creep_names = filter(lambda n: Game.creeps[n].memory.target_room == room.name, Object.keys(Game.creeps))
-                    current_creeps = []
-                    for creep_name in creep_names:
-                        current_creeps.append(Game.creeps[creep_name])
-                    
-                    #Check how many miners we have, because we might have to spawn smaller miners if we don't have any.
-                    num_miners = len(filter(lambda c: c.memory.role == 'miner', current_creeps))
-                    
-                    
-                    #Spawn miners if we have at least one hauler.
-                    sources = room.find(FIND_SOURCES)
-                    if Cache.rooms[room_name].current_carry_parts > 0:
-                        spawned = False
-                        for source in sources:
-                            current_miners = filter(lambda c: c.memory.role == 'miner' and c.memory.target == source.id and (c.spawning or (c.ticksToLive > 50)), current_creeps)
-                            if len(current_miners) == 0:
-                                energy_to_use = room.energyCapacityAvailable
-                                if room.memory.no_miner_ticks > 20:
-                                    energy_to_use = room.energyAvailable
-                                miner_multiple = min(3, math.floor(energy_to_use / 250))
-                                body = []
-                                cost = 0
-                                for i in range(miner_multiple):
-                                    body.append(WORK)
-                                    body.append(WORK)
-                                    cost += 200
-                                for i in range(miner_multiple):
-                                    body.append(MOVE)
-                                    cost += 50
-                                if room.energyAvailable - used_energy >= cost:
-                                    result = spawn.spawnCreep(body, name, {'memory': {'target_room': room.name, 'role': "miner", 'target': source.id}})
-                                    if result == OK:
+                if not spawn.isActive():
+                    continue
+                if spawn.spawning:
+                    if spawn.spawning.remainingTime <= 1:
+                        creeps = spawn.pos.findInRange(FIND_MY_CREEPS, 1)
+                        for creep in creeps:
+                            creep.moveTo(room.controller)
+                    continue
+                #This constructs a creep name from the timecode we made earlier, adding an 's' to the front for every previous creep we've spawned on this tick.
+                name = ''
+                for i in range(num_spawns):
+                    name += 's'
+                name += timecode
+                
+                
+                #This creates a list of all of our creeps with this room as their target room, which we can filter later.
+                creep_names = filter(lambda n: Game.creeps[n].memory.target_room == room.name, Object.keys(Game.creeps))
+                current_creeps = []
+                for creep_name in creep_names:
+                    current_creeps.append(Game.creeps[creep_name])
+                
+                #Check how many miners we have, because we might have to spawn smaller miners if we don't have any.
+                num_miners = len(filter(lambda c: c.memory.role == 'miner', current_creeps))
+                
+                
+                #Spawn miners if we have at least one hauler.
+                sources = room.find(FIND_SOURCES)
+                if Cache.rooms[room_name].current_carry_parts > 0:
+                    spawned = False
+                    for source in sources:
+                        current_miners = filter(lambda c: c.memory.role == 'miner' and c.memory.target == source.id and (c.spawning or (c.ticksToLive > 50)), current_creeps)
+                        if len(current_miners) == 0:
+                            energy_to_use = room.energyCapacityAvailable
+                            if room.memory.no_miner_ticks > 20:
+                                energy_to_use = room.energyAvailable
+                            miner_multiple = min(3, math.floor(energy_to_use / 250))
+                            body = []
+                            cost = 0
+                            for i in range(miner_multiple):
+                                body.append(WORK)
+                                body.append(WORK)
+                                cost += 200
+                            for i in range(miner_multiple):
+                                body.append(MOVE)
+                                cost += 50
+                            if room.energyAvailable - used_energy >= cost:
+                                result = spawn.spawnCreep(body, name, {'memory': {'target_room': room.name, 'role': "miner", 'target': source.id}})
+                                if result == OK:
+                                    room.memory.no_miner_ticks = 0
+                                    num_spawns += 1
+                                    used_energy += cost
+                                elif result == ERR_NOT_ENOUGH_ENERGY and len(current_miners) == 0:
+                                    if room.memory.no_miner_ticks == None:
                                         room.memory.no_miner_ticks = 0
-                                        num_spawns += 1
-                                        used_energy += cost
-                                    elif result == ERR_NOT_ENOUGH_ENERGY and len(current_miners) == 0:
-                                        if room.memory.no_miner_ticks == None:
-                                            room.memory.no_miner_ticks = 0
-                                        room.memory.no_miner_ticks += 1
-                                spawned = True
-                                break
-                        if spawned:
-                            continue
-                    
-                    
-                    #This calculates the income based on the number of sources and the size of our miners. That is used to scale our hauler and worker spawning.
-                    miner_multiple = min(3, math.floor(room.energyCapacityAvailable / 250))
-                    income = len(sources) * min(10, 4 * miner_multiple)
-                    
-                    
-                    #Spawn haulers if we have less carry parts than three times our income.
-                    if Cache.rooms[room_name].current_carry_parts < income * 3:
-                        #Use the current energy available in the room rather than the maximum if there are no haulers currently.
-                        energy_to_use = spawn.room.energyCapacityAvailable
-                        if Cache.rooms[room_name].current_carry_parts == 0:
-                            energy_to_use = spawn.room.energyAvailable
-                        hauler_multiple = min(16, math.floor(energy_to_use / 150))
-                        part_change = 0
-                        body = []
-                        cost = 0
-                        for i in range(hauler_multiple):
-                            body.append(CARRY)
-                            body.append(CARRY)
-                            body.append(MOVE)
-                            part_change += 2
-                            cost += 150
-                        if room.energyAvailable - used_energy >= cost:
-                            result = spawn.spawnCreep(body, name, {'memory': {'target_room': room.name, 'role': "hauler"}})
-                            if result == OK:
-                                num_spawns += 1
-                                used_energy += cost
-                                Cache.rooms[room_name].current_carry_parts += part_change
-                                print(spawn.room.name + ' spawned hauler ' + name + ' with body ' + body_shorthand(body))
+                                    room.memory.no_miner_ticks += 1
+                            spawned = True
+                            break
+                    if spawned:
                         continue
-                    
-                    
-                    #Spawn workers if we have less work parts than our income.
-                    if Cache.rooms[room_name].current_work_parts < income:
-                        worker_multiple = min(16, math.floor(spawn.room.energyCapacityAvailable / 200))
-                        body = []
-                        cost = 0
-                        part_change = 0
-                        for i in range(worker_multiple):
-                            body.append(WORK)
-                            part_change += 1
-                            cost += 100
-                        for i in range(worker_multiple):
-                            body.append(CARRY)
-                            cost += 50
-                        for i in range(worker_multiple):
-                            body.append(MOVE)
-                            cost += 50
-                        if room.energyAvailable - used_energy >= cost:
-                            result = spawn.spawnCreep(body, name, {'memory': {'target_room': room.name, 'role': "worker"}})
-                            if result == OK:
-                                num_spawns += 1
-                                used_energy += cost
-                                Cache.rooms[room_name].current_work_parts += part_change
-                                print(spawn.room.name + ' spawned worker ' + name + ' with body ' + body_shorthand(body))
-                        continue
-                    
-                    
-                    #If we got here without trying to spawn anything, skip the remaining spawns.
-                    break
+                
+                
+                #This calculates the income based on the number of sources and the size of our miners. That is used to scale our hauler and worker spawning.
+                miner_multiple = min(3, math.floor(room.energyCapacityAvailable / 250))
+                income = len(sources) * min(10, 4 * miner_multiple)
+                
+                
+                #Spawn haulers if we have less carry parts than three times our income.
+                if Cache.rooms[room_name].current_carry_parts < income * 3:
+                    #Use the current energy available in the room rather than the maximum if there are no haulers currently.
+                    energy_to_use = spawn.room.energyCapacityAvailable
+                    if Cache.rooms[room_name].current_carry_parts == 0:
+                        energy_to_use = spawn.room.energyAvailable
+                    hauler_multiple = min(16, math.floor(energy_to_use / 150))
+                    part_change = 0
+                    body = []
+                    cost = 0
+                    for i in range(hauler_multiple):
+                        body.append(CARRY)
+                        body.append(CARRY)
+                        body.append(MOVE)
+                        part_change += 2
+                        cost += 150
+                    if room.energyAvailable - used_energy >= cost:
+                        result = spawn.spawnCreep(body, name, {'memory': {'target_room': room.name, 'role': "hauler"}})
+                        if result == OK:
+                            num_spawns += 1
+                            used_energy += cost
+                            Cache.rooms[room_name].current_carry_parts += part_change
+                            print(spawn.room.name + ' spawned hauler ' + name + ' with body ' + body_shorthand(body))
+                    continue
+                
+                
+                #Spawn workers if we have less work parts than our income.
+                if Cache.rooms[room_name].current_work_parts < income:
+                    worker_multiple = min(16, math.floor(spawn.room.energyCapacityAvailable / 200))
+                    body = []
+                    cost = 0
+                    part_change = 0
+                    for i in range(worker_multiple):
+                        body.append(WORK)
+                        part_change += 1
+                        cost += 100
+                    for i in range(worker_multiple):
+                        body.append(CARRY)
+                        cost += 50
+                    for i in range(worker_multiple):
+                        body.append(MOVE)
+                        cost += 50
+                    if room.energyAvailable - used_energy >= cost:
+                        result = spawn.spawnCreep(body, name, {'memory': {'target_room': room.name, 'role': "worker"}})
+                        if result == OK:
+                            num_spawns += 1
+                            used_energy += cost
+                            Cache.rooms[room_name].current_work_parts += part_change
+                            print(spawn.room.name + ' spawned worker ' + name + ' with body ' + body_shorthand(body))
+                    continue
+                
+                
+                #If we got here without trying to spawn anything, skip the remaining spawns.
+                break
 
     
     
