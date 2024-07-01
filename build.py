@@ -366,7 +366,10 @@ def install_env(config):
 
         if not os.path.exists(env_dir):
             print("creating venv environment...")
-            args = ['python', '-m', 'venv', '--system-site-packages', env_dir]
+            if os.name == 'posix':
+                args = ['python3', '-m', 'venv', '--system-site-packages', env_dir]
+            else:
+                args = ['python', '-m', 'venv', '--system-site-packages', env_dir]
 
             ret = subprocess.Popen(args, cwd=config.base_dir).wait()
 
