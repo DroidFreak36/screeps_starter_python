@@ -366,10 +366,8 @@ def install_env(config):
 
         if not os.path.exists(env_dir):
             print("creating venv environment...")
-            if os.name == 'posix':
-                args = ['python3', '-m', 'venv', '--system-site-packages', env_dir]
-            else:
-                args = ['python', '-m', 'venv', '--system-site-packages', env_dir]
+            
+            args = [sys.executable, '-m', 'venv', '--system-site-packages', env_dir]
 
             ret = subprocess.Popen(args, cwd=config.base_dir).wait()
 
@@ -534,12 +532,12 @@ def patch(config):
             file_str = file_str[:location] + file_str[location + 61:]
             print('Unifying globals...')
             #If you have additional globals you want to unify across files, add them here.
-            while 'Cache$1' in file_str:
-                location = file_str.find('Cache$1')
-                file_str = file_str[:location] + 'Cache' + file_str[location + 7:]
-            while 'iMemory$1' in file_str:
-                location = file_str.find('iMemory$1')
-                file_str = file_str[:location] + 'iMemory' + file_str[location + 9:]
+            while 'Cache$' in file_str:
+                location = file_str.find('Cache$')
+                size = 6
+                while file_str[location + size].isnumeric():
+                    size += 1
+                file_str = file_str[:location] + 'Cache' + file_str[location + size:]
             with open(os.path.join(dist_dir, file_name), 'w', encoding='utf8') as f:
                 f.write(file_str)
 
