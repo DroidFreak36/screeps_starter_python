@@ -8,9 +8,9 @@ If you hop into the #python channel in the Screeps official Discord, I'll be hap
 
 ## Setup Guide
 
-The first thing you need to do is to install Python 3.13 (includeing IDLE, which is bundled with it by default on Windows) and Node.js 17.9.1 (Including NPM, which is bundled with it). Those listed versions are the newest versions that will work, newer versions than that are known to not work. Older version than those may work in many cases.
+The first thing you need to do is to install Python 3.13 (including IDLE, which is bundled with it by default on Windows), Node.js 17.9.1 (Including NPM, which is bundled with it), and Git (any version). Those listed versions are the newest versions that will work, newer versions than that are known to not work. Older version than those may work in many cases.
 
-Next, copy the repository to your local device one of a number of ways. My recommended way would probably be to install the GitHub desktop app and pull it that way, I've found it to be quite easy and convenient. The second method (and the one recommended by the original creator of the starter) is to install Git normally and run `git clone https://github.com/DroidFreak36/screeps_starter_python.git` in the folder you want to clone the repository into. If you want, you could also download the repository as a zip and unzip it locally.
+Next, copy the repository to your local device one of a number of ways. My recommended way would probably be to install the GitHub desktop app and pull it that way, I've found it to be quite easy and convenient. The second method (and the one recommended by the original creator of the starter) is to run `git clone https://github.com/DroidFreak36/screeps_starter_python.git` in the folder you want to clone the repository into. If you want, you could also download the repository as a zip and unzip it locally.
 
 Next, you have to set up the config file. To push code to the official server, make a copy of `config.default.json` and name it `config.json`, then insert your auth token (generated through "Manage Account" in-game). For a private server, copy `config.private-server-example.json` into `config.json` instead and set up the settings as needed.
 

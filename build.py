@@ -541,41 +541,63 @@ def patch(config):
             with open(os.path.join(dist_dir, file_name), 'w', encoding='utf8') as f:
                 f.write(file_str)
 
+def pre_patch_path(path):
+    if os.path.isdir(path):
+        for name in os.listdir(path):
+            if not name in ['__pycache__', '__target__', 'defs']:
+                pre_patch_path(os.path.join(path, name))
+    elif os.path.basename(path)[-3:] == '.py':
+        # there will be an error if there's non latin alphabet in the files when encoding is not set to utf8
+        with open(path, 'r', encoding='utf8') as f:
+            file_str = f.read()
+        #Replace negative array indices with len() syntax
+        while True:
+            match = re.search(r'''[\n\s]([^('"\n\s#]+)\[\s*-(.+)\]''', file_str)
+            if match == None:
+                break
+            array_name = match.group(1)
+            neg_index = match.group(2)
+            file_str = file_str[:match.start(1)] + array_name + '[len(' + array_name + ') - ' + neg_index + ']' + file_str[match.end():]
+        #Replace lines that would be deleted by transcrypt with pragma JS
+        while True:
+            match = re.search(r'''(\n\s*)([^('"\n#]+\[.+\]\s*[+\-*/%]?=[^\n=]*)(\n)''', file_str)
+            if match == None:
+                break
+            inside = match.group(2)
+            inside = re.sub('None', 'null', inside)
+            inside = re.sub('True', 'true', inside)
+            inside = re.sub('False', 'false', inside)
+            inside = re.sub('#', '//', inside)
+            while True:
+                sub_match = re.search(r'''len\s*\(([^()]+)\)''', inside)
+                if sub_match == None:
+                    break
+                inside = inside[:sub_match.start()] + sub_match.group(1) + '.length' + inside[sub_match.end():]
+            file_str = file_str[:match.start()] + match.group(1) + '__pragma__("js", "{}", """' + inside + ';""")' + match.group(3) + file_str[match.end():]
+        with open(path, 'w', encoding='utf8') as f:
+            f.write(file_str)
+        
+
 def pre_patch(config):
     print('Fixing array/object writes...')
     src_dir = os.path.join(config.base_dir, 'src')
     patch_dir = os.path.join(config.base_dir, 'build')
     for name in os.listdir(patch_dir):
         if not name in ['__pycache__', '__target__', 'defs']:
-            os.remove(os.path.join(patch_dir, name))
+            path = os.path.join(patch_dir, name)
+            if os.path.isdir(path):
+                shutil.rmtree(path)
+            else:
+                os.remove(path)
     for name in os.listdir(src_dir):
         if not name in ['__pycache__', '__target__', 'defs']:
             source = os.path.join(src_dir, name)
             dest = os.path.join(patch_dir, name)
-            shutil.copy2(source, dest)
-    for file_name in os.listdir(patch_dir):
-        if not file_name in ['__pycache__', '__target__', 'defs'] and file_name[-3:] == '.py':
-            file_str = None
-            # there will be an error if there's non latin alphabet in the files when encoding is not set to utf8
-            with open(os.path.join(patch_dir, file_name), 'r', encoding='utf8') as f:
-                file_str = f.read()
-            while True:
-                match = re.search(r'''(\n\s*)([^('"\n#]+\[.+\]\s*[+\-*/%]?=[^\n=]*)(\n)''', file_str)
-                if match == None:
-                    break
-                inside = match.group(2)
-                inside = re.sub('None', 'null', inside)
-                inside = re.sub('True', 'true', inside)
-                inside = re.sub('False', 'false', inside)
-                inside = re.sub('#', '//', inside)
-                while True:
-                    sub_match = re.search(r'''len\s*\(([^()]+)\)''', inside)
-                    if sub_match == None:
-                        break
-                    inside = inside[:sub_match.span()[0]] + sub_match.group(1) + '.length' + inside[sub_match.span()[1]:]
-                file_str = file_str[:match.span()[0]] + match.group(1) + '__pragma__("js", "{}", """' + inside + ';""")' + match.group(3) + file_str[match.span()[1]:]
-            with open(os.path.join(patch_dir, file_name), 'w', encoding='utf8') as f:
-                f.write(file_str)
+            if os.path.isdir(source):
+                shutil.copytree(source, dest, dirs_exist_ok=True)
+            else:
+                shutil.copy2(source, dest)
+    pre_patch_path(patch_dir)
 
 
 def main():
