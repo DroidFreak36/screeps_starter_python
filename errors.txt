@@ -1,0 +1,27 @@
+
+Transcrypt (TM) Python to JavaScript Small Sane Subset Transpiler Version 3.7.17
+Copyright (C) Geatec Engineering. License: Apache 2.0
+
+
+Saving target code in: C:/Users/mark.dykstra/Documents/GitHub/ourobot/build/__target__/org.transcrypt.__runtime__.js
+Saving target code in: C:/Users/mark.dykstra/Documents/GitHub/ourobot/build/__target__/defs.js
+Saving target code in: C:/Users/mark.dykstra/Documents/GitHub/ourobot/build/__target__/math.js
+Saving target code in: C:/Users/mark.dykstra/Documents/GitHub/ourobot/build/__target__/pq.js
+Saving target code in: C:/Users/mark.dykstra/Documents/GitHub/ourobot/build/__target__/droid_random.js
+Saving target code in: C:/Users/mark.dykstra/Documents/GitHub/ourobot/build/__target__/util.js
+Saving target code in: C:/Users/mark.dykstra/Documents/GitHub/ourobot/build/__target__/movement.js
+Saving target code in: C:/Users/mark.dykstra/Documents/GitHub/ourobot/build/__target__/missions.js
+Saving target code in: C:/Users/mark.dykstra/Documents/GitHub/ourobot/build/__target__/fixer.js
+Saving target code in: C:/Users/mark.dykstra/Documents/GitHub/ourobot/build/__target__/squads.js
+Saving target code in: C:/Users/mark.dykstra/Documents/GitHub/ourobot/build/__target__/traffic.js
+Saving target code in: C:/Users/mark.dykstra/Documents/GitHub/ourobot/build/__target__/planningV5.js
+
+Error while compiling (offending file last):
+	File 'C:/Users/mark.dykstra/Documents/GitHub/ourobot/build/main.py', line 3, at import of:
+	File 'actions', line 1373, namely:
+	
+	for res_type in Object.keys(target_room.memory.factory_input_resources)
+ [<-SYNTAX FAULT] 
+
+Aborted
+

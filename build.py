@@ -2,6 +2,7 @@
 import errno
 import json
 import os
+import io
 import subprocess
 import sys
 import urllib.parse
@@ -9,7 +10,6 @@ import urllib.request
 from argparse import ArgumentParser
 
 import base64
-import os
 import shutil
 
 import file_expander
@@ -223,12 +223,23 @@ def run_transcrypt(config):
         cmd_args = transcrypt_dirty_args
 
     args = [transcrypt_executable] + cmd_args + [source_main]
-
-    ret = subprocess.Popen(args, cwd=config.source_dir).wait()
-
+    
+    with open(os.path.join(config.base_dir, 'errors.txt'), 'w', encoding='utf8') as err_file:
+        ret = subprocess.Popen(args, cwd=config.source_dir, stdout=err_file, stderr=subprocess.STDOUT).wait()
     if ret != 0:
-        raise Exception("transcrypt failed. exit code: {}. command line '{}'. working dir: '{}'."
-                        .format(ret, "' '".join(args), config.source_dir))
+        with open(os.path.join(config.base_dir, 'errors.txt'), 'r', encoding='utf8') as err_file:
+            err_string = err_file.read()
+        raise Exception(
+"""
+
+transcrypt failed. exit code: {}.
+command line {}.
+working dir: {}.
+
+output: 
+{}""".format(ret, " ".join(args), config.source_dir, err_string))
+    
+    
 
 
 def copy_artifacts(config):
