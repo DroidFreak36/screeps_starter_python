@@ -7,6 +7,7 @@ from .structures import Structure
 from .creep import Creep
 
 
+
 # noinspection PyPep8Naming
 class _Effect:  # type: List[_Effect]
     """
@@ -45,6 +46,50 @@ class RoomObject:
         self.effects = effects
         self.pos = pos
         self.room = room
+
+
+
+class RoomVisual:
+    """
+    Room visuals provide a way to show various visual debug info in game rooms. You can use the RoomVisual object to draw simple shapes that are visible only to you. Every existing Room object already contains the visual property, but you also can create new RoomVisual objects for any room (even without visibility) using the constructor.
+
+    :type roomName: str
+    """
+
+    def __init__(self, roomName: str) -> None:
+        """
+        NOTE: In order to use this, you must surround it with `__new__`: `__new__(RoomVisual(roomName))`
+        """
+        self.roomName = roomName
+    
+    def line(x1: Union[int, 'RoomPosition', RoomObject], y1: Union[int, 'RoomPosition', RoomObject], x2: int = None, y2: int = None, style: Optional[Dict[str, Any]] = None) -> RoomVisual:
+        pass
+    
+    def circle(x: Union[int, 'RoomPosition', RoomObject], y: int = None, style: Optional[Dict[str, Any]] = None) -> RoomVisual:
+        pass
+    
+    def rect(x: Union[int, 'RoomPosition', RoomObject], y: int, width: int, height: int = None, style: Optional[Dict[str, Any]] = None) -> RoomVisual:
+        pass
+    
+    def poly(points: List[Any], style: Optional[Dict[str, Any]] = None) -> RoomVisual:
+        pass
+    
+    def text(text: str, x: Union[int, 'RoomPosition', RoomObject], y: int = None, style: Optional[Dict[str, Any]] = None) -> RoomVisual:
+        pass
+    
+    def clear() -> RoomVisual:
+        pass
+    
+    def getSize() -> int:
+        pass
+    
+    def export() -> str:
+        pass
+    
+    def import(val: str) -> RoomVisual:
+        pass
+    
+    
 
 
 # noinspection PyPep8Naming
